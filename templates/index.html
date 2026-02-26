@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Recognition System</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+    <!-- Loading Overlay -->
+    <div class="overlay" id="overlay">
+        <div class="hourglass-card">
+            <div class="hourglass-wrapper">
+                <svg class="hourglass-svg" viewBox="0 0 60 100" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Hourglass outline -->
+                    <polygon points="5,5 55,5 55,10 33,50 55,90 55,95 5,95 5,90 27,50 5,10" fill="none" stroke="#2dd4bf" stroke-width="3" stroke-linejoin="round"/>
+                    <!-- Top sand -->
+                    <clipPath id="topClip">
+                        <polygon points="5,5 55,5 55,10 33,50 27,50 5,10"/>
+                    </clipPath>
+                    <rect class="top-sand" x="0" y="5" width="60" height="45" fill="#2dd4bf" clip-path="url(#topClip)" opacity="0.7"/>
+                    <!-- Bottom sand -->
+                    <clipPath id="bottomClip">
+                        <polygon points="27,50 33,50 55,90 55,95 5,95 5,90"/>
+                    </clipPath>
+                    <rect class="bottom-sand" x="0" y="50" width="60" height="50" fill="#0d9488" clip-path="url(#bottomClip)" opacity="0.85"/>
+                    <!-- Sand particles falling -->
+                    <circle class="particle p1" cx="30" cy="52" r="1.5" fill="#99f6e4"/>
+                    <circle class="particle p2" cx="30" cy="60" r="1.5" fill="#99f6e4"/>
+                    <circle class="particle p3" cx="30" cy="68" r="1.5" fill="#99f6e4"/>
+                </svg>
+            </div>
+            <h2 class="analyzing-text">Analyzing Face...</h2>
+            <p class="timer-label">Time elapsed</p>
+            <div class="timer-display" id="timerDisplay">00:00</div>
+            <p class="est-label">DeepFace is scanning known faces — usually takes <strong>10–30 sec</strong></p>
+            <div class="progress-bar-wrap">
+                <div class="progress-bar-fill" id="progressBar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Page -->
+    <div class="page-bg">
+        <div class="container">
+            <div class="brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+                        <circle cx="9" cy="10" r="1.5" fill="currentColor" stroke="none"/>
+                        <circle cx="15" cy="10" r="1.5" fill="currentColor" stroke="none"/>
+                        <path d="M8.5 15.5s1 2 3.5 2 3.5-2 3.5-2" stroke-linecap="round"/>
+                        <path d="M3 7h2M19 7h2M3 17h2M19 17h2" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1>Face Recognition</h1>
+                    <p class="subtitle">Upload a photo to identify the person</p>
+                </div>
+            </div>
+
+            <form method="POST" enctype="multipart/form-data" id="uploadForm">
+                <!-- Drop zone -->
+                <label class="drop-zone" id="dropZone" for="fileInput">
+                    <div class="drop-content" id="dropContent">
+                        <div class="upload-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="17 8 12 3 7 8"/>
+                                <line x1="12" y1="3" x2="12" y2="15"/>
+                            </svg>
+                        </div>
+                        <p class="drop-title">Drop your image here</p>
+                        <p class="drop-sub">or click to browse &nbsp;·&nbsp; JPG, PNG, JPEG</p>
+                    </div>
+                    <div class="preview-wrap" id="previewWrap" style="display:none;">
+                        <img id="previewImg" src="" alt="Preview"/>
+                        <span class="preview-name" id="previewName"></span>
+                        <button type="button" class="remove-btn" id="removeBtn">✕ Remove</button>
+                    </div>
+                    <input type="file" name="image" id="fileInput" accept="image/*" required style="display:none;">
+                </label>
+
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    Recognize Face
+                </button>
+            </form>
+
+            {% if name %}
+            <div class="result-card {% if name == 'No face detected' or name == 'Unknown Person' %}result-unknown{% else %}result-found{% endif %}">
+                <div class="result-icon">
+                    {% if name != 'No face detected' and name != 'Unknown Person' %}
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                    {% else %}
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    {% endif %}
+                </div>
+                <div>
+                    <p class="result-label">Recognition Result</p>
+                    <p class="result-name">{{ name }}</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const dropZone = document.getElementById('dropZone');
+        const dropContent = document.getElementById('dropContent');
+        const previewWrap = document.getElementById('previewWrap');
+        const previewImg = document.getElementById('previewImg');
+        const previewName = document.getElementById('previewName');
+        const removeBtn = document.getElementById('removeBtn');
+        const uploadForm = document.getElementById('uploadForm');
+        const overlay = document.getElementById('overlay');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const progressBar = document.getElementById('progressBar');
+
+        // File preview
+        fileInput.addEventListener('change', function () {
+            showPreview(this.files[0]);
+        });
+
+        function showPreview(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                previewImg.src = e.target.result;
+                previewName.textContent = file.name;
+                dropContent.style.display = 'none';
+                previewWrap.style.display = 'flex';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        removeBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            fileInput.value = '';
+            previewImg.src = '';
+            previewName.textContent = '';
+            dropContent.style.display = 'flex';
+            previewWrap.style.display = 'none';
+        });
+
+        // Drag & drop
+        dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+        dropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file) { fileInput.files = e.dataTransfer.files; showPreview(file); }
+        });
+
+        // Hourglass timer on submit
+        let timerInterval = null;
+        let progressInterval = null;
+        const ESTIMATED_SECONDS = 30;
+
+        uploadForm.addEventListener('submit', function () {
+            overlay.style.display = 'flex';
+            let elapsed = 0;
+
+            timerInterval = setInterval(() => {
+                elapsed++;
+                const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+                const s = String(elapsed % 60).padStart(2, '0');
+                timerDisplay.textContent = m + ':' + s;
+            }, 1000);
+
+            // Progress bar fills over estimated duration
+            let pct = 0;
+            progressInterval = setInterval(() => {
+                pct = Math.min(pct + (100 / ESTIMATED_SECONDS), 95);
+                progressBar.style.width = pct + '%';
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
